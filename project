@@ -1,0 +1,165 @@
+  import java.util.*;
+
+class ParkingLot {
+    private Map<Integer, ParkingSpace> spaces = new HashMap<>();
+    private Map<String, Reservation> reservations = new HashMap<>();
+    private static final double HOURLY_FEE = 5.0;
+
+    // Constructor - Initialize parking lot with spaces
+    public ParkingLot(int totalSpaces) {
+        for (int i = 1; i <= totalSpaces; i++) {
+            spaces.put(i, new ParkingSpace(i));
+        }
+    }
+
+    // Check available parking spaces
+    public void displayAvailableSpaces() {
+        boolean available = false;
+        for (ParkingSpace space : spaces.values()) {
+            if (!space.isOccupied()) {
+                System.out.println("Space " + space.getSpaceNumber() + " is available.");
+                available = true;
+            }
+        }
+        if (!available) {
+            System.out.println("No available parking spaces.");
+        }
+    }
+
+    // Reserve a parking space
+    public boolean reserveSpace(int spaceNumber, String vehiclePlate) {
+        ParkingSpace space = spaces.get(spaceNumber);
+        if (space != null && !space.isOccupied()) {
+            space.occupy(vehiclePlate);
+            reservations.put(vehiclePlate, new Reservation(vehiclePlate, spaceNumber));
+            System.out.println("Reservation successful for vehicle " + vehiclePlate + " in space " + spaceNumber);
+            return true;
+        }
+        System.out.println("Space " + spaceNumber + " is already occupied or invalid.");
+        return false;
+    }
+
+    // Check-out from a parking space
+    public boolean checkout(String vehiclePlate) {
+        Reservation reservation = reservations.remove(vehiclePlate);
+        if (reservation != null) {
+            ParkingSpace space = spaces.get(reservation.getSpaceNumber());
+            double fee = calculateFee(reservation.getStartTime());
+            space.free();
+            System.out.println("Vehicle " + vehiclePlate + " has checked out from space " + reservation.getSpaceNumber() +
+                    ". Total fee: $" + fee);
+            return true;
+        }
+        System.out.println("No reservation found for vehicle " + vehiclePlate);
+        return false;
+    }
+
+    // Calculate parking fee
+    private double calculateFee(long startTime) {
+        long durationInMillis = System.currentTimeMillis() - startTime;
+        double durationInHours = (double) durationInMillis / (1000 * 60 * 60);
+        return durationInHours * HOURLY_FEE;
+    }
+}
+
+class ParkingSpace {
+    private int spaceNumber;
+    private boolean occupied;
+    private String vehiclePlate;
+
+    public ParkingSpace(int spaceNumber) {
+        this.spaceNumber = spaceNumber;
+        this.occupied = false;
+    }
+
+    public int getSpaceNumber() {
+        return spaceNumber;
+    }
+
+    public boolean isOccupied() {
+        return occupied;
+    }
+
+    public void occupy(String vehiclePlate) {
+        this.occupied = true;
+        this.vehiclePlate = vehiclePlate;
+    }
+
+    public void free() {
+        this.occupied = false;
+        this.vehiclePlate = null;
+    }
+}
+
+class Reservation {
+    private String vehiclePlate;
+    private int spaceNumber;
+    private long startTime;
+
+    public Reservation(String vehiclePlate, int spaceNumber) {
+        this.vehiclePlate = vehiclePlate;
+        this.spaceNumber = spaceNumber;
+        this.startTime = System.currentTimeMillis();
+    }
+
+    public String getVehiclePlate() {
+        return vehiclePlate;
+    }
+
+    public int getSpaceNumber() {
+        return spaceNumber;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+}
+
+public class ParkingLotManagementSystem {
+
+    static Scanner scanner = new Scanner(System.in);
+    static ParkingLot parkingLot = new ParkingLot(10); // Initialize parking lot with 10 spaces
+
+    public static void main(String[] args) {
+        while (true) {
+            System.out.println("\n==== Parking Lot Management ====");
+            System.out.println("1. Display Available Spaces");
+            System.out.println("2. Reserve Parking Space");
+            System.out.println("3. Checkout Vehicle");
+            System.out.println("4. Exit");
+            System.out.print("Choose option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();  // Consume newline
+
+            switch (choice) {
+                case 1 -> parkingLot.displayAvailableSpaces();
+                case 2 -> reserveSpace();
+                case 3 -> checkoutVehicle();
+                case 4 -> {
+                    System.out.println("Exiting system...");
+                    return;
+                }
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    static void reserveSpace() {
+        System.out.print("Enter vehicle plate number: ");
+        String vehiclePlate = scanner.nextLine();
+
+        System.out.print("Enter parking space number to reserve: ");
+        int spaceNumber = scanner.nextInt();
+
+        parkingLot.reserveSpace(spaceNumber, vehiclePlate);
+    }
+
+    static void checkoutVehicle() {
+        System.out.print("Enter vehicle plate number to checkout: ");
+        String vehiclePlate = scanner.nextLine();
+
+        parkingLot.checkout(vehiclePlate);
+    }
+}
+
+
